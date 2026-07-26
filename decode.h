@@ -44,7 +44,7 @@ Status open_files_for_decoding(DecodeInfo *decoInfo);
 
 Status decode_magic_string(char *magicString, DecodeInfo *decInfo);
 
-Status decode_data_from_image(char *data, int size, DecodeInfo *decoInfo);
+Status decode_data_from_image(char *data, int size, DecodeInfo *decoInfo, ContentType conType);
 
 Status decode_byte_from_lsb(char *data, char *image_buffer);
 
