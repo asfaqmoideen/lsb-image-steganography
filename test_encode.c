@@ -7,7 +7,7 @@
 int main(int argc, char **argv)
 {
     // validate the argv with argc
-    if(argc < 3){
+    if(argc < 2){
         printf("Entered input not valid, please enter inputs in  the below format\n");
         printf("For encoding : ./a.out -e beautiful.bmp secret.txt [stego.bmp]\n");
         printf("For decoding : ./a.out -d stego.bmp output.txt\n");
