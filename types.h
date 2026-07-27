@@ -18,4 +18,8 @@ typedef enum
     e_unsupported
 } OperationType;
 
+typedef enum{
+    e_content,
+    e_info
+} ContentType;
 #endif

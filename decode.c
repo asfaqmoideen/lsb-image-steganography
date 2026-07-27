@@ -15,14 +15,13 @@ Status read_and_validate_decode_args(char *argv[], DecodeInfo *decoInfo){
         printf("Failed to get source image in .bmp format\n");
         return e_failure;
     }
-
-    if(strcmp(strchr(argv[3], '.'), ".txt") == 0){
-        printf("recieved secret message\n");
+    if(argv[3] != NULL){
+        printf("Recived the output file name as %s\n", argv[3]);
         decoInfo->output_text_fname = argv[3];
     }
     else{
-        printf("Failed to recived ouput file \n");
-        return e_failure;
+        printf("output file not recieved, creating new as output.txt\n");
+        decoInfo->output_text_fname = "output.txt";
     }
 
     return e_success;
@@ -56,7 +55,7 @@ Status open_files_for_decoding(DecodeInfo *decoInfo){
 Status decode_magic_string(char *magicString, DecodeInfo *decInfo){
 
     char magicStringFromImage[2];
-    decode_data_from_image(magicStringFromImage, 2, decInfo);
+    decode_data_from_image(magicStringFromImage, 2, decInfo, e_info);
     if(strcmp(magicStringFromImage, magicString)){
        printf("Magic string not found in the image\n");
        return e_failure; 
@@ -67,22 +66,79 @@ Status decode_magic_string(char *magicString, DecodeInfo *decInfo){
     return e_success;
 }
 
-Status decode_data_from_image(char *data, int size, DecodeInfo *decoInfo){
+Status decode_data_from_image(char *data, int size, DecodeInfo *decoInfo, ContentType conType){
 
     for(int i = 0; i < size; i++){
         fread(decoInfo->image_data, 8, 1, decoInfo->fptr_src_image);
-        decode_byte_to_lsb(data[i], decoInfo->image_data);
-        fwrite(decoInfo->image_data, 8, 1, decoInfo->fptr_output_text);
+        decode_byte_from_lsb(&data[i], decoInfo->image_data);
+        if(conType == e_content)
+            fwrite(&data[i], 1, 1, decoInfo->fptr_output_text);
     }
 }
 
-Status decode_byte_to_lsb(char data, char *image_buffer){
+Status decode_byte_from_lsb(char *data, char *image_buffer){
 
+    *data = 0;    
     for(int i = 0 ; i < 8 ; i++){
-        image_buffer[i] = (image_buffer[i] & 0xFE) | ((data >> (7 - i) & 1));
+        char bit = (image_buffer[i] & 1);
+        *data = *data | (bit << (7-i));
     }
 }
 
+Status decode_integer_from_lsb(int *intFound, DecodeInfo *decoInfo){
+
+    char str[32];
+    *intFound = 0;
+    
+    fread(str,32,1,decoInfo->fptr_src_image);
+    for(int i = 0; i < 32 ; i++){
+        char bit = (str[i] & 1);
+        *intFound = *intFound | (bit << (32-i));
+    }
+}
+
+Status decode_file_extension_size(DecodeInfo *decoInfo){
+    int extn_size;
+    decode_integer_from_lsb(&extn_size, decoInfo);
+    decoInfo->secret_file_extn_size = extn_size;
+    printf("Secret file extension size is %d\n", extn_size);
+    return e_success;
+}
+
+Status decode_file_extension(char *extention, DecodeInfo *decoInfo){
+
+    decode_data_from_image(extention, decoInfo->secret_file_extn_size,decoInfo, e_info);
+    return e_success;
+}
+
+Status decode_secret_file_size(DecodeInfo *decoInfo){
+    int secret_file_size = 0 ;
+    printf("Secret file size is %d\n", secret_file_size);
+    decode_integer_from_lsb(&secret_file_size, decoInfo);
+    decoInfo->size_secret_file = secret_file_size;
+    printf("Secret file size is %d\n", secret_file_size);
+    return e_success;
+}
+
+Status decode_conetent_from_image(long size, DecodeInfo *decoInfo){
+
+    char secret_file_contents[size];
+
+    decode_data_from_image(secret_file_contents, size, decoInfo, e_content);
+
+    return e_success;
+}
+
+Status create_new_output_file_with_secret_file_extn(DecodeInfo *decoInfo){
+    
+    strcpy(decoInfo->output_text_fname, "output");
+    strcat(decoInfo->output_text_fname, decoInfo->extn_secret_file);
+    decoInfo->fptr_output_text = fopen(decoInfo->output_text_fname, "w");
+    if(decoInfo->fptr_output_text == NULL){
+        return e_failure;
+    }
+    return e_success;
+}
 
 Status do_decoding(DecodeInfo *decoInfo){
 
@@ -103,7 +159,68 @@ Status do_decoding(DecodeInfo *decoInfo){
     }
     else{
         printf("Failed to get the Magic string from the image\n");
+        return e_failure;
     }
+
+    
+    printf("Lets decode the extension file size\n");
+    if(decode_file_extension_size(decoInfo) == e_success){
+        printf("Extension size decoded from the image\n");
+    }
+    else{
+        printf("Failed to decode extension size from the image\n");
+        return e_failure;
+    }
+
+
+    strcpy(decoInfo->extn_output_file, strchr(decoInfo->output_text_fname, '.'));
+
+    printf("Decoding the secret file extension from the image\n");
+    if(decode_file_extension(decoInfo->extn_secret_file, decoInfo)==e_success){
+        printf("decoInfo->extn_output_file : %s\n",decoInfo->extn_output_file);
+        printf("Decoded the secret file extension\n");
+        if(!strcmp(decoInfo->extn_output_file, decoInfo->extn_secret_file)){
+            printf("Output file and Secret file extensions are matching\n");
+
+        }
+        else{
+            printf("Output file and Secret file extensions are not matching\n");
+            printf("Creating a new output file in %s extension\n", decoInfo->extn_secret_file);
+            
+            if(create_new_output_file_with_secret_file_extn(decoInfo) == e_success){
+                printf("Created and opened newly created file\n");
+            }
+            else{
+                printf("Failed to open the newly created file\n");
+                return e_failure;
+            }
+        }
+    }
+    else{
+        printf("Decoding the file extension failed\n");
+        return e_failure;
+    }
+
+    printf("Decoding the secret file size from the image\n");
+    if(decode_secret_file_size(decoInfo) == e_success){
+        printf("Suucessfully encoded the secret file size from the image\n");
+    }
+    else{
+        printf("Failed to decode secret file size from the image\n");
+        return e_failure;
+    }
+
+
+    printf("Decoding the conetent from the image file and storing in the output file\n");
+    if(decode_conetent_from_image(decoInfo->size_secret_file, decoInfo) == e_success){
+        printf("Done, decoded the contents and pasted in the output\n");
+    }
+    else{
+        printf("Failed to decode the contents of the file\n");
+        return e_failure;
+    }
+
+
 
     return e_success;
 }

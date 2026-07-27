@@ -154,6 +154,7 @@ Status encode_data_to_image(char *data, int size, EncodeInfo *encInfo){
 
 Status encode_byte_to_lsb(char data, char *image_buffer){
 
+
     for(int i = 0 ; i < 8 ; i++){
         image_buffer[i] = (image_buffer[i] & 0xFE) | ((data >> (7 - i) & 1));
     }
@@ -221,6 +222,7 @@ Status do_encoding(EncodeInfo *encInfo){
     }
     else{
         printf("Not %s file is not suitable for encoding\n", encInfo->src_image_fname);
+        return e_failure;
     }
 
     printf("Copying the header %s to %s\n", encInfo->src_image_fname, encInfo->stego_image_fname);
@@ -260,7 +262,7 @@ Status do_encoding(EncodeInfo *encInfo){
         return e_failure;
     }
 
-    if(encode_secret_file_size(encInfo->image_capacity, encInfo)==e_success){
+    if(encode_secret_file_size(encInfo->size_secret_file, encInfo)==e_success){
          printf("Encoded Secret file size successfully\n");
 
     }
