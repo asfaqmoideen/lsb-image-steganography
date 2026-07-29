@@ -10,7 +10,7 @@ int main(int argc, char **argv)
     if(argc < 2){
         printf("Entered input not valid, please enter inputs in  the below format\n");
         printf("For encoding : ./a.out -e beautiful.bmp secret.txt [stego.bmp]\n");
-        printf("For decoding : ./a.out -d stego.bmp output.txt\n");
+        printf("For decoding : ./a.out -d stego.bmp [output.txt]\n");
         return 1;
     }
 
@@ -36,7 +36,7 @@ int main(int argc, char **argv)
         }
     }
     else if(check_operation_type(argv) == e_decode){
-        printf("You have seleted decode");
+        printf("You have seleted decode\n");
         DecodeInfo decoInfo;
         if(read_and_validate_decode_args(argv, &decoInfo) == e_success){
             printf("Read and validated decode arguments successfully\n");
