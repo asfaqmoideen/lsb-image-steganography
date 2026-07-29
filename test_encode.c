@@ -7,7 +7,7 @@
 int main(int argc, char **argv)
 {
     // validate the argv with argc
-    if(argc < 2){
+    if(argc < 2 || (strcmp(argv[1], "-e") == 0 && argc < 4) ||(strcmp(argv[1], "-d") == 0 && argc < 3) ){
         printf("Entered input not valid, please enter inputs in  the below format\n");
         printf("For encoding : ./a.out -e beautiful.bmp secret.txt [stego.bmp]\n");
         printf("For decoding : ./a.out -d stego.bmp [output.txt]\n");
@@ -20,6 +20,7 @@ int main(int argc, char **argv)
     if(check_operation_type(argv) == e_encode){
         printf("You have seleted encode\n");
         EncodeInfo stegnography;
+
         if(read_and_validate_encode_args(argv, &stegnography) == e_success){
             printf("Read and validated encode arguments successfully\n");
             printf("--------------Start Encoding-----------------\n");
@@ -31,8 +32,8 @@ int main(int argc, char **argv)
             }
         }
         else{
-            printf("Failed to validate encode arguments");
-            return -1;
+            printf("Failed to validate encode arguments\n");
+            return 1;
         }
     }
     else if(check_operation_type(argv) == e_decode){
@@ -55,8 +56,8 @@ int main(int argc, char **argv)
         }
     }
     else{
-        printf("Invalid input");
-        printf("Use -e for encoding\n Use -d for decoding");
+        printf("Invalid Operation Type\n");
+        printf("Use -e for encoding\nUse -d for decoding\n");
     }
 
 
