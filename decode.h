@@ -38,22 +38,31 @@ typedef struct _DecodeInfo{
 /* Read and validate Decode args from argv */
 Status read_and_validate_decode_args(char *argv[], DecodeInfo *decoInfo);
 
+/* Calls all the required functions for decoding*/
 Status do_decoding(DecodeInfo *decoInfo);
 
+/*Open the files for decoding*/
 Status open_files_for_decoding(DecodeInfo *decoInfo);
 
+/*Deodes the magic string from the image*/
 Status decode_magic_string(char *magicString, DecodeInfo *decInfo);
 
+/*decodes the data from image - where the real decode happens for chars*/
 Status decode_data_from_image(char *data, int size, DecodeInfo *decoInfo, ContentType conType);
 
+/*Decodes each byte and store it as char in data*/
 Status decode_byte_from_lsb(char *data, char *image_buffer);
 
+/*Decodes the file extention size*/
 Status decode_file_extension_size(DecodeInfo *decodeInfo);
 
+/*Decodes the file extension*/
 Status decode_file_extension(char *extention, DecodeInfo *decoInfo);
 
+/*Decodes the secret file size*/
 Status decode_secret_file_size(DecodeInfo *decoInfo);
 
+/*Decode the secret contents from the image*/
 Status decode_conetent_from_image(long size, DecodeInfo *DecodeInfo);
 
 
