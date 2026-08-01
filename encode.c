@@ -80,7 +80,7 @@ Status open_files(EncodeInfo *encInfo)
 Status read_and_validate_encode_args(char **argv, EncodeInfo *encInfo){
 
     if(strcmp(strchr(argv[2], '.'), ".bmp") == 0){
-        printf("Recoived source image\n");
+        printf("Recived source image\n");
         encInfo->src_image_fname = argv[2];
     }
     else{
@@ -99,7 +99,7 @@ Status read_and_validate_encode_args(char **argv, EncodeInfo *encInfo){
 
     if(argv[4] != NULL){
         printf("Recived the output file name\n");
-
+        encInfo->stego_image_fname = argv[4];
     }
     else{
         printf("output file not recieved, creating new as stego.bmp\n");
